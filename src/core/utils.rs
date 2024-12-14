@@ -31,9 +31,9 @@ pub mod pairs {
         A: Clone,
         T: Clone,
     {
-        pub(crate) a: A,
-        pub(crate) b: A,
-        pub(crate) x: T,
+        pub a: A,
+        pub b: A,
+        pub x: T,
     }
 
     impl<A: Clone, T: Signed + Clone> Pair<A, T> {
