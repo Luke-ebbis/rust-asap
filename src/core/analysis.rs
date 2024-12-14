@@ -23,11 +23,10 @@ mod tests {
     use kodama::{linkage, Method};
 
     use rayon::iter::IntoParallelRefIterator;
-
-    use crate::lib::analysis::hclust::haversine;
-    use crate::lib::core::pairs::Pairwise;
-    use crate::lib::core::{fasta_distance_jukes_cantor_number, remove_empty};
-    use crate::lib::io::read_fasta;
+    use crate::core::analysis::hclust::haversine;
+    use crate::core::io::read_fasta;
+    use crate::core::utils::{fasta_distance_jukes_cantor_number, remove_empty};
+    use crate::core::utils::pairs::Pairwise;
 
     #[test]
     fn test_haversine() {

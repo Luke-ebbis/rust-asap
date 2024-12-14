@@ -1,9 +1,9 @@
-use crate::lib::core::distances::jukes_cantor;
-use crate::lib::core::pairs::Pair;
 use bio::alignment::distance::levenshtein;
 use bio::io::fasta::Record;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
+use crate::core::utils::distances::jukes_cantor;
+use crate::core::utils::pairs::Pair;
 
 /// A struct to deal with paired operations
 pub mod pairs {
@@ -348,8 +348,8 @@ fn len_condensed_dis_mat(n: usize) -> usize {
 
 #[cfg(test)]
 mod test_metrics {
-    use crate::lib::core::distances;
     use approx_eq::assert_approx_eq;
+    use crate::core::utils::distances;
 
     #[test]
     fn test_percentage_distance() {
@@ -422,14 +422,13 @@ pub fn choose(
 
 #[cfg(test)]
 mod test_traits {
-    use crate::lib::core::fasta_distance_jukes_cantor_number;
-    use crate::lib::core::pairs::{Pair, Pairwise};
-    use crate::lib::core::{choose, remove_empty};
-    use crate::lib::io::read_fasta;
     use approx_eq::assert_approx_eq;
     use bio::io::fasta::Record;
 
     use rayon::iter::IntoParallelRefIterator;
+    use crate::core::io::read_fasta;
+    use crate::core::utils::{choose, fasta_distance_jukes_cantor_number, remove_empty};
+    use crate::core::utils::pairs::{Pair, Pairwise};
 
     #[test]
     fn test_choose() {

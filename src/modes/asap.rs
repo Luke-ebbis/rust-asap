@@ -9,10 +9,10 @@
 //! 3. Recursive splits
 //! 4. Relative barcode gap width.
 
-use crate::lib::core::pairs::{Pair, Pairwise};
-use crate::lib::core::{fasta_distance_jukes_cantor_number, remove_empty};
-use crate::lib::io;
-use crate::Args;
+use crate::core::utils::pairs::{Pair, Pairwise};
+use crate::core::utils::{fasta_distance_jukes_cantor_number, remove_empty};
+use crate::core::io;
+use clap::Args;
 use bio::io::fasta::Record;
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
@@ -66,8 +66,8 @@ fn verify_records(
 /// Gives back an Array of Fasta records valid for analysis.
 ///
 /// Empty records are removed. If there are only two records or fewer. The function raises an error.
-fn take_input(input: &Args) -> Result<Vec<Record>, Box<dyn Error>> {
-    let fasta = io::read_fasta(&input.input)?;
+fn take_input(input: &str) -> Result<Vec<Record>, Box<dyn Error>> {
+    let fasta = io::read_fasta(&input)?;
     let records = remove_empty(fasta);
     let verified = verify_records(records)?;
     Ok(verified)
@@ -82,7 +82,7 @@ fn compute_distances(mut records: Vec<Record>) -> Vec<Pair<Record, f64>> {
 }
 
 /// The entry point of the asap algorithm
-pub(crate) fn asap(args: Args) -> Result<(), Box<dyn Error>> {
+pub(crate) fn asap(args: &str) -> Result<(), Box<dyn Error>> {
     use rayon::iter::ParallelIterator;
     let fasta = take_input(&args)?;
     let distances = compute_distances(fasta);
@@ -102,7 +102,7 @@ pub(crate) fn asap(args: Args) -> Result<(), Box<dyn Error>> {
 
 #[cfg(test)]
 mod tests {
-    use crate::lib::io::read_fasta;
+    use crate::core::io::read_fasta;
     use super::*;
 
     // This test may give an IO error
