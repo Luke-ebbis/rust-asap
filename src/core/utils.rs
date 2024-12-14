@@ -236,7 +236,7 @@ pub fn remove_empty(x: Vec<Record>) -> Vec<Record> {
 /// Maybe for undefined distances I can use [std::f64::INFINITY].
 ///
 /// See [emboss-tool](https://www.bioinformatics.nl/cgi-bin/emboss/distmat).
-mod distances {
+pub mod distances {
     use bio::alignment::distance;
     use bio::utils::TextSlice;
 
