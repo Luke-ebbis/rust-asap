@@ -105,7 +105,7 @@ mod tests {
     use crate::core::io::read_fasta;
     use super::*;
 
-    // This test may give an IO error
+    /// This test may give an IO error if the test file is not found.
     #[test]
     fn test_input() -> Result<(), Box<dyn Error>> {
         // File does not exist
