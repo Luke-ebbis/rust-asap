@@ -25,7 +25,7 @@ pub mod pairs {
     /// # A Pair struct
     ///
     /// An object to store two objects with a value.
-    #[derive(Eq, Ord, Debug, Copy, Clone)]
+    #[derive(Eq, Debug, Copy, Clone)]
     pub struct Pair<A, T: Signed + Clone>
     where
         A: Clone,

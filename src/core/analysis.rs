@@ -14,7 +14,7 @@ pub mod distance {
     /// For now it only works with acutal (symetric) distances.
     #[derive(Builder)]
     pub struct DistanceAnalysis<
-        T: num_traits::Signed + ?Sized + Clone + Send,
+        T: num_traits::Signed + Clone + Send,
         F: Fn(Record, Record) -> Pair<Record, T> + Send + 'static + Sync,
     > {
         // Mandatory Field:
@@ -27,7 +27,7 @@ pub mod distance {
     }
 
     impl<
-            T: num_traits::Signed + ?Sized + Clone + Send,
+            T: num_traits::Signed +  Clone + Send,
             F: Fn(Record, Record) -> Pair<Record, T>
                 + Send
                 + 'static
@@ -41,7 +41,7 @@ pub mod distance {
     }
 
     impl<
-            T: Signed + ?Sized + Clone + Send,
+            T: Signed + Clone + Send,
             F: Fn(Record, Record) -> Pair<Record, T>
                 + 'static
                 + Sync
@@ -58,15 +58,6 @@ pub mod distance {
         }
     }
 
-    // impl<T: Signed + ?Sized + Clone + Send,
-    //      F: Fn(Record, Record) -> Pair<Record, T>
-    //       +  'static + Sync + std::marker::Send> DistanceAnalysisBuilder <T, F> {
-    //
-    //     // Private helper method with access to the builder struct.
-    //     fn default_f(&self) -> Result<F, String> {
-    //         Ok(fasta_distance_jukes_cantor_number)
-    //     }
-    // }
 
     #[test]
     fn test_distance() {
@@ -128,7 +119,7 @@ pub mod distance {
 
     #[derive(Debug)]
     pub struct SequenceDistanceAnalysis<
-        T: num_traits::Signed + ?Sized + Clone + Send,
+        T: num_traits::Signed + Clone + Send,
         F: Fn(Record, Record) -> Pair<Record, T> + Send + 'static + Sync,
     > {
         distance: F,
