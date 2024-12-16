@@ -11,7 +11,7 @@ pub mod distance {
 
     /// For now it only works with acutal (symetric) distances.
     #[derive(Builder)]
-    struct DistanceAnalysis <T: num_traits::Signed + ?Sized + Clone + Send,
+    pub struct DistanceAnalysis <T: num_traits::Signed + ?Sized + Clone + Send,
         F: Fn(Record, Record) -> Pair<Record, T>
         + Send
         + 'static
@@ -26,11 +26,21 @@ pub mod distance {
         f: F,
     }
 
+    impl <T: num_traits::Signed + ?Sized + Clone + Send,
+        F: Fn(Record, Record) -> Pair<Record, T>
+        + Send
+        + 'static
+        + Sync + std::clone::Clone > DistanceAnalysisBuilder<T,F> {
+        pub(crate) fn new() -> DistanceAnalysisBuilder<T, F> {
+            DistanceAnalysisBuilder::create_empty()
+        }
+    }
+
 
     impl<T: Signed + ?Sized + Clone + Send,
         F: Fn(Record, Record) -> Pair<Record, T>
         +  'static + Sync + std::marker::Send> DistanceAnalysis< T, F> where Vec<Pair<bio::io::fasta::Record, f64>>: From<Vec<Pair<bio::io::fasta::Record, T>>> {
-        fn run(mut self) -> CondensedDistanceMatrix {
+        pub(crate) fn run(mut self) -> CondensedDistanceMatrix {
             CondensedDistanceMatrix {matrix: self.data.pairwise_map_condensed_upper(self.f).into()}
         }
     }
@@ -58,7 +68,7 @@ pub mod distance {
 
     #[derive(Debug)]
     #[derive(PartialEq, PartialOrd, Clone)]
-    struct CondensedDistanceMatrix {
+    pub struct CondensedDistanceMatrix {
         matrix: Vec<Pair<Record, f64>>,
     }
 
@@ -85,6 +95,10 @@ pub mod distance {
         /// Find the min value of the matrix that is not infinite
         pub fn min(self) -> Pair<Record, f64> {
             self.remove_inf().iter().min_by(|x,y| x.partial_cmp(y).unwrap()).cloned().unwrap()
+        }
+
+        pub fn len(&self) -> usize {
+            self.matrix.len()
         }
     }
 

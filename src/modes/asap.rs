@@ -19,6 +19,7 @@ use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
 use std::error::Error;
 use std::fmt::format;
+use crate::core::analysis::distance::DistanceAnalysisBuilder;
 
 fn find_length_differences(mut input: Vec<Record>) -> Vec<Pair<Record, f64>> {
     fn len_diff(
@@ -81,18 +82,15 @@ fn compute_distances(mut records: Vec<Record>) -> Vec<Pair<Record, f64>> {
     fasta_distances
 }
 
+
 /// The entry point of the asap algorithm
 pub(crate) fn asap(args: &str) -> Result<(), Box<dyn Error>> {
-    use rayon::iter::ParallelIterator;
-    let fasta = take_input(&args)?;
-    let distances = compute_distances(fasta);
-    let amount = distances.len();
-    let mut distances: Vec<Pair<Record, f64>> = distances
-        .into_par_iter()
-        // .iter().cloned()
-        .filter(|x: &Pair<Record, f64>| x.x != f64::INFINITY)
-        .collect();
-    let top = distances.pop().unwrap();
+    let recs = take_input("resources/test/data/asv-listerria-taxon-Bacillales-Order.fasta.final_tree.fa")?;
+    let recs = remove_empty(recs);
+    let distanceAnalysis = DistanceAnalysisBuilder::new().data(recs).f(fasta_distance_jukes_cantor_number).build().unwrap();
+    let mat = distanceAnalysis.run();
+    let amount = mat.len();
+    let top = mat.max();
     let distance = top.x;
     let msg = format!("{distance:?}");
     println!("Most different pair\n{:?}", top);
@@ -133,6 +131,12 @@ mod tests {
             assert_eq!(err.to_string(), "There are only 2 records in the file! More records are needed to delineate species.");
         }
 
+        Ok(())
+    }
+
+    #[test]
+    fn run_asap() -> Result<(), Box<dyn Error>> {
+        asap("resources/test/data/asv-listerria-taxon-Bacillales-Order.fasta")?;
         Ok(())
     }
 }
