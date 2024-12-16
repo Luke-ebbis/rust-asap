@@ -9,17 +9,17 @@
 //! 3. Recursive splits
 //! 4. Relative barcode gap width.
 
+use crate::core::analysis::distance::DistanceAnalysisBuilder;
+use crate::core::io;
 use crate::core::utils::pairs::{Pair, Pairwise};
 use crate::core::utils::{fasta_distance_jukes_cantor_number, remove_empty};
-use crate::core::io;
-use clap::Args;
 use bio::io::fasta::Record;
+use clap::Args;
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
 use std::error::Error;
 use std::fmt::format;
-use crate::core::analysis::distance::DistanceAnalysisBuilder;
 
 fn find_length_differences(mut input: Vec<Record>) -> Vec<Pair<Record, f64>> {
     fn len_diff(
@@ -47,7 +47,8 @@ fn verify_records(
             .collect::<Vec<usize>>();
         let first = lengths[0];
         let differences = find_length_differences(records.clone());
-        let max_diff = differences.iter().max_by(|x, y| x.partial_cmp(y).unwrap());
+        let max_diff =
+            differences.iter().max_by(|x, y| x.partial_cmp(y).unwrap());
         match max_diff {
             Some(diff) => {
                 let amount = records.len() - differences.len();
@@ -58,8 +59,8 @@ fn verify_records(
                                     diff.b.id()
                 );
                 Err(Box::from(error))
-            },
-            None => Ok(records)
+            }
+            None => Ok(records),
         }
     }
 }
@@ -82,12 +83,15 @@ fn compute_distances(mut records: Vec<Record>) -> Vec<Pair<Record, f64>> {
     fasta_distances
 }
 
-
 /// The entry point of the asap algorithm
 pub(crate) fn asap(args: &str) -> Result<(), Box<dyn Error>> {
     let recs = take_input("resources/test/data/asv-listerria-taxon-Bacillales-Order.fasta.final_tree.fa")?;
     let recs = remove_empty(recs);
-    let distanceAnalysis = DistanceAnalysisBuilder::new().data(recs).f(fasta_distance_jukes_cantor_number).build().unwrap();
+    let distanceAnalysis = DistanceAnalysisBuilder::new()
+        .data(recs)
+        .f(fasta_distance_jukes_cantor_number)
+        .build()
+        .unwrap();
     let mat = distanceAnalysis.run();
     let amount = mat.len();
     let top = mat.max();
@@ -100,14 +104,15 @@ pub(crate) fn asap(args: &str) -> Result<(), Box<dyn Error>> {
 
 #[cfg(test)]
 mod tests {
-    use crate::core::io::read_fasta;
     use super::*;
+    use crate::core::io::read_fasta;
 
     /// This test may give an IO error if the test file is not found.
     #[test]
     fn test_input() -> Result<(), Box<dyn Error>> {
         // File does not exist
-        let recs = read_fasta("resources/test/data/sample.fasta-2line.un-eq-len")?;
+        let recs =
+            read_fasta("resources/test/data/sample.fasta-2line.un-eq-len")?;
         let recs = remove_empty(recs);
         let out = verify_records(recs);
         if let Err(err) = out {
@@ -119,8 +124,10 @@ mod tests {
         let recs = remove_empty(recs);
         let out = verify_records(recs);
         match out {
-            Err(err) => {panic!("This file should be correct!")},
-            Ok(x) => assert_eq!(x.len(), 17)
+            Err(err) => {
+                panic!("This file should be correct!")
+            }
+            Ok(x) => assert_eq!(x.len(), 17),
         }
 
         // Correct file, too few sequences
@@ -136,7 +143,9 @@ mod tests {
 
     #[test]
     fn run_asap() -> Result<(), Box<dyn Error>> {
-        asap("resources/test/data/asv-listerria-taxon-Bacillales-Order.fasta")?;
+        asap(
+            "resources/test/data/asv-listerria-taxon-Bacillales-Order.fasta",
+        )?;
         Ok(())
     }
 }

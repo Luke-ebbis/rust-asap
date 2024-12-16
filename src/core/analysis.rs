@@ -1,22 +1,22 @@
 /// Object for pairwise distance analysis
 pub mod distance {
+    use crate::core::io::read_fasta;
+    use crate::core::utils::pairs::{Pair, Pairwise};
+    use crate::core::utils::{
+        fasta_distance_jukes_cantor_number, remove_empty,
+    };
     use bio::io::fasta::Record;
     use derivative::Derivative;
-    use num_traits::Signed;
-    use crate::core::utils::{fasta_distance_jukes_cantor_number, remove_empty};
-    use crate::core::utils::pairs::{Pair, Pairwise};
     use derive_builder::Builder;
     use kodama::Float;
-    use crate::core::io::read_fasta;
+    use num_traits::Signed;
 
     /// For now it only works with acutal (symetric) distances.
     #[derive(Builder)]
-    pub struct DistanceAnalysis <T: num_traits::Signed + ?Sized + Clone + Send,
-        F: Fn(Record, Record) -> Pair<Record, T>
-        + Send
-        + 'static
-        + Sync > {
-
+    pub struct DistanceAnalysis<
+        T: num_traits::Signed + ?Sized + Clone + Send,
+        F: Fn(Record, Record) -> Pair<Record, T> + Send + 'static + Sync,
+    > {
         // Mandatory Field:
         /// Data to calculate with.
         data: Vec<Record>,
@@ -26,22 +26,35 @@ pub mod distance {
         f: F,
     }
 
-    impl <T: num_traits::Signed + ?Sized + Clone + Send,
-        F: Fn(Record, Record) -> Pair<Record, T>
-        + Send
-        + 'static
-        + Sync + std::clone::Clone > DistanceAnalysisBuilder<T,F> {
+    impl<
+            T: num_traits::Signed + ?Sized + Clone + Send,
+            F: Fn(Record, Record) -> Pair<Record, T>
+                + Send
+                + 'static
+                + Sync
+                + std::clone::Clone,
+        > DistanceAnalysisBuilder<T, F>
+    {
         pub(crate) fn new() -> DistanceAnalysisBuilder<T, F> {
             DistanceAnalysisBuilder::create_empty()
         }
     }
 
-
-    impl<T: Signed + ?Sized + Clone + Send,
-        F: Fn(Record, Record) -> Pair<Record, T>
-        +  'static + Sync + std::marker::Send> DistanceAnalysis< T, F> where Vec<Pair<bio::io::fasta::Record, f64>>: From<Vec<Pair<bio::io::fasta::Record, T>>> {
+    impl<
+            T: Signed + ?Sized + Clone + Send,
+            F: Fn(Record, Record) -> Pair<Record, T>
+                + 'static
+                + Sync
+                + std::marker::Send,
+        > DistanceAnalysis<T, F>
+    where
+        Vec<Pair<bio::io::fasta::Record, f64>>:
+            From<Vec<Pair<bio::io::fasta::Record, T>>>,
+    {
         pub(crate) fn run(mut self) -> CondensedDistanceMatrix {
-            CondensedDistanceMatrix {matrix: self.data.pairwise_map_condensed_upper(self.f).into()}
+            CondensedDistanceMatrix {
+                matrix: self.data.pairwise_map_condensed_upper(self.f).into(),
+            }
         }
     }
 
@@ -59,42 +72,53 @@ pub mod distance {
     fn test_distance() {
         let recs = read_fasta("resources/test/data/asv-listerria-taxon-Bacillales-Order.fasta.final_tree.fa").unwrap();
         let recs = remove_empty(recs);
-        let distanceAnalysis = DistanceAnalysisBuilder::create_empty().data(recs).f(fasta_distance_jukes_cantor_number).build().unwrap();
+        let distanceAnalysis = DistanceAnalysisBuilder::create_empty()
+            .data(recs)
+            .f(fasta_distance_jukes_cantor_number)
+            .build()
+            .unwrap();
         let mat = distanceAnalysis.run();
         dbg!(&mat);
         let max = mat.max();
         dbg!(&max);
     }
 
-    #[derive(Debug)]
-    #[derive(PartialEq, PartialOrd, Clone)]
+    #[derive(Debug, PartialEq, PartialOrd, Clone)]
     pub struct CondensedDistanceMatrix {
         matrix: Vec<Pair<Record, f64>>,
     }
 
-    impl CondensedDistanceMatrix
-    {
+    impl CondensedDistanceMatrix {
         pub fn iter(&self) -> impl Iterator + use<'_> {
             // Logic to return an iterator over the internal collection
             self.matrix.iter()
         }
     }
 
-
     impl CondensedDistanceMatrix {
-
         fn remove_inf(self) -> Vec<Pair<Record, f64>> {
-            self.matrix.into_iter().filter(|x: &Pair<Record, f64>| x.x != f64::INFINITY).collect()
+            self.matrix
+                .into_iter()
+                .filter(|x: &Pair<Record, f64>| x.x != f64::INFINITY)
+                .collect()
         }
 
         /// Find the max value of the matrix that is not infinite
         pub fn max(self) -> Pair<Record, f64> {
-            self.remove_inf().iter().max_by(|x,y| x.partial_cmp(y).unwrap()).cloned().unwrap()
+            self.remove_inf()
+                .iter()
+                .max_by(|x, y| x.partial_cmp(y).unwrap())
+                .cloned()
+                .unwrap()
         }
 
         /// Find the min value of the matrix that is not infinite
         pub fn min(self) -> Pair<Record, f64> {
-            self.remove_inf().iter().min_by(|x,y| x.partial_cmp(y).unwrap()).cloned().unwrap()
+            self.remove_inf()
+                .iter()
+                .min_by(|x, y| x.partial_cmp(y).unwrap())
+                .cloned()
+                .unwrap()
         }
 
         pub fn len(&self) -> usize {
@@ -102,25 +126,22 @@ pub mod distance {
         }
     }
 
-
     #[derive(Debug)]
-    pub struct SequenceDistanceAnalysis<T: num_traits::Signed + ?Sized + Clone + Send,
-        F: Fn(Record, Record) -> Pair<Record, T>
-        + Send
-        + 'static
-        + Sync,
+    pub struct SequenceDistanceAnalysis<
+        T: num_traits::Signed + ?Sized + Clone + Send,
+        F: Fn(Record, Record) -> Pair<Record, T> + Send + 'static + Sync,
     > {
-        distance: F
+        distance: F,
     }
 
-
-
-    impl<T: Float + num_traits::Signed + std::marker::Send,
-        F: Fn(Record, Record) -> Pair<Record, T>
-        + Send
-        + 'static
-        + Sync,
-    > SequenceDistanceAnalysis<T, F> where Vec<Pair<bio::io::fasta::Record, f64>>: From<Vec<Pair<bio::io::fasta::Record, T>>> {
+    impl<
+            T: Float + num_traits::Signed + std::marker::Send,
+            F: Fn(Record, Record) -> Pair<Record, T> + Send + 'static + Sync,
+        > SequenceDistanceAnalysis<T, F>
+    where
+        Vec<Pair<bio::io::fasta::Record, f64>>:
+            From<Vec<Pair<bio::io::fasta::Record, T>>>,
+    {
         /// Construct a sequence distance analysis.
         ///
         /// ```
@@ -128,20 +149,22 @@ pub mod distance {
         /// use asap::core::utils::fasta_distance_jukes_cantor_number;
         /// let sequence_analysis = SequenceDistanceAnalysis::new(fasta_distance_jukes_cantor_number);
         /// ```
-        pub fn new(distance: F)  -> Self {
-            SequenceDistanceAnalysis {distance }
+        pub fn new(distance: F) -> Self {
+            SequenceDistanceAnalysis { distance }
         }
-
 
         /// Run using the specified distance function.
-        pub fn run(self, records: Vec<Record>) -> CondensedDistanceMatrix {
-            let mut fasta_distances = records.clone()
-                .pairwise_map_condensed_upper(self.distance);
-           CondensedDistanceMatrix { matrix: fasta_distances.into()}
+        pub fn run(
+            self,
+            records: Vec<Record>,
+        ) -> CondensedDistanceMatrix {
+            let mut fasta_distances =
+                records.clone().pairwise_map_condensed_upper(self.distance);
+            CondensedDistanceMatrix {
+                matrix: fasta_distances.into(),
+            }
         }
     }
-
-
 }
 
 pub mod hclust {
@@ -162,10 +185,7 @@ pub mod hclust {
         2.0 * EARTH_RADIUS * x.sqrt().atan()
     }
 
-
-    pub fn hclust() -> () {
-
-    }
+    pub fn hclust() -> () {}
 }
 
 #[cfg(test)]
@@ -173,11 +193,13 @@ mod tests {
     use bio::io::fasta::Record;
     use kodama::{linkage, Method};
 
-    use rayon::iter::IntoParallelRefIterator;
     use crate::core::analysis::hclust::haversine;
     use crate::core::io::read_fasta;
-    use crate::core::utils::{fasta_distance_jukes_cantor_number, remove_empty};
     use crate::core::utils::pairs::Pairwise;
+    use crate::core::utils::{
+        fasta_distance_jukes_cantor_number, remove_empty,
+    };
+    use rayon::iter::IntoParallelRefIterator;
 
     #[test]
     fn test_haversine() {
