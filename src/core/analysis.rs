@@ -51,6 +51,7 @@ pub mod distance {
         let recs = remove_empty(recs);
         let distanceAnalysis = DistanceAnalysisBuilder::create_empty().data(recs).f(fasta_distance_jukes_cantor_number).build().unwrap();
         let mat = distanceAnalysis.run();
+        dbg!(&mat);
         let max = mat.max();
         dbg!(&max);
     }
@@ -78,7 +79,12 @@ pub mod distance {
 
         /// Find the max value of the matrix that is not infinite
         pub fn max(self) -> Pair<Record, f64> {
-            self.remove_inf().pop().unwrap()
+            self.remove_inf().iter().max_by(|x,y| x.partial_cmp(y).unwrap()).cloned().unwrap()
+        }
+
+        /// Find the min value of the matrix that is not infinite
+        pub fn min(self) -> Pair<Record, f64> {
+            self.remove_inf().iter().min_by(|x,y| x.partial_cmp(y).unwrap()).cloned().unwrap()
         }
     }
 
