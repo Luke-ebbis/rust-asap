@@ -8,6 +8,8 @@ pub mod distance {
     use derive_builder::Builder;
     use kodama::Float;
     use num_traits::Signed;
+    use crate::core::io::read_fasta;
+    use crate::core::utils::{fasta_distance_jukes_cantor_number, remove_empty};
 
     /// For now it only works with acutal (symetric) distances.
     #[derive(Builder)]
