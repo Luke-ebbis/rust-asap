@@ -6,7 +6,7 @@ pub mod distance {
     use bio::io::fasta::Record;
     
     use derive_builder::Builder;
-    use kodama::Float;
+    use num_traits::Float;
     use num_traits::Signed;
     use crate::core::io::read_fasta;
     use crate::core::utils::{fasta_distance_jukes_cantor_number, remove_empty};
