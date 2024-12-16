@@ -1,12 +1,10 @@
 /// Object for pairwise distance analysis
 pub mod distance {
-    use crate::core::io::read_fasta;
+    
     use crate::core::utils::pairs::{Pair, Pairwise};
-    use crate::core::utils::{
-        fasta_distance_jukes_cantor_number, remove_empty,
-    };
+    
     use bio::io::fasta::Record;
-    use derivative::Derivative;
+    
     use derive_builder::Builder;
     use kodama::Float;
     use num_traits::Signed;
@@ -149,7 +147,7 @@ pub mod distance {
             self,
             records: Vec<Record>,
         ) -> CondensedDistanceMatrix {
-            let mut fasta_distances =
+            let fasta_distances =
                 records.clone().pairwise_map_condensed_upper(self.distance);
             CondensedDistanceMatrix {
                 matrix: fasta_distances.into(),
@@ -176,7 +174,7 @@ pub mod hclust {
         2.0 * EARTH_RADIUS * x.sqrt().atan()
     }
 
-    pub fn hclust() -> () {}
+    pub fn hclust() {}
 }
 
 #[cfg(test)]

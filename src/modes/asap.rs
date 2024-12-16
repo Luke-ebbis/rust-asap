@@ -14,12 +14,9 @@ use crate::core::io;
 use crate::core::utils::pairs::{Pair, Pairwise};
 use crate::core::utils::{fasta_distance_jukes_cantor_number, remove_empty};
 use bio::io::fasta::Record;
-use clap::Args;
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
-use rayon::prelude::IntoParallelRefIterator;
 use std::error::Error;
-use std::fmt::format;
 
 fn find_length_differences(mut input: Vec<Record>) -> Vec<Pair<Record, f64>> {
     fn len_diff(
@@ -69,7 +66,7 @@ fn verify_records(
 ///
 /// Empty records are removed. If there are only two records or fewer. The function raises an error.
 fn take_input(input: &str) -> Result<Vec<Record>, Box<dyn Error>> {
-    let fasta = io::read_fasta(&input)?;
+    let fasta = io::read_fasta(input)?;
     let records = remove_empty(fasta);
     let verified = verify_records(records)?;
     Ok(verified)
