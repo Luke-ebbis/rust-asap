@@ -11,7 +11,7 @@ pub mod distance {
     use crate::core::io::read_fasta;
     use crate::core::utils::{fasta_distance_jukes_cantor_number, remove_empty};
 
-    /// For now it only works with acutal (symetric) distances.
+    /// For now it only works with actual (symmetric) distances.
     #[derive(Builder)]
     pub struct DistanceAnalysis<
         T: num_traits::Signed + Clone + Send,
@@ -63,7 +63,7 @@ pub mod distance {
     fn test_distance() {
         let recs = read_fasta("resources/test/data/asv-listerria-taxon-Bacillales-Order.fasta.final_tree.fa").unwrap();
         let recs = remove_empty(recs);
-        let distanceAnalysis = DistanceAnalysisBuilder::create_empty()
+        let distanceAnalysis = DistanceAnalysisBuilder::new()
             .data(recs)
             .f(fasta_distance_jukes_cantor_number)
             .build()
@@ -112,6 +112,7 @@ pub mod distance {
                 .unwrap()
         }
 
+        /// Get the amount of pairwise comparisons.
         pub fn len(&self) -> usize {
             self.matrix.len()
         }
@@ -159,24 +160,30 @@ pub mod distance {
 }
 
 pub mod hclust {
+    use bio::io::fasta::Record;
+    use kodama::{nnchain, Dendrogram, Step};
+    use log::warn;
+    use crate::core::analysis::distance::DistanceAnalysisBuilder;
+    use crate::core::io::read_fasta;
+    use crate::core::utils::{fasta_distance_jukes_cantor_number, remove_empty};
 
-    pub fn haversine(
-        (lat1, lon1): (f64, f64),
-        (lat2, lon2): (f64, f64),
-    ) -> f64 {
-        const EARTH_RADIUS: f64 = 3958.756; // miles
-
-        let (lat1, lon1) = (lat1.to_radians(), lon1.to_radians());
-        let (lat2, lon2) = (lat2.to_radians(), lon2.to_radians());
-
-        let delta_lat = lat2 - lat1;
-        let delta_lon = lon2 - lon1;
-        let x = (delta_lat / 2.0).sin().powi(2)
-            + lat1.cos() * lat2.cos() * (delta_lon / 2.0).sin().powi(2);
-        2.0 * EARTH_RADIUS * x.sqrt().atan()
-    }
-
-    pub fn hclust() {}
+    // #[test]
+    // pub fn test_hclust() {
+//
+        // let recs = read_fasta("resources/test/data/asv-listerria-taxon-Bacillales-Order.fasta.final_tree.fa").unwrap();
+        // let recs = remove_empty(recs);
+        // let distanceAnalysis = DistanceAnalysisBuilder::new()
+            // .data(recs)
+            // .f(fasta_distance_jukes_cantor_number)
+            // .build()
+            // .unwrap();
+        // let mat = distanceAnalysis.run();
+        // let d: Dendrogram<f64> = Dendrogram::new(mat.len());
+        // let step : Step<f64> = Step::new(1, 1, 0.6, 0);
+        // let a = d.push();
+        // nnchain()
+        // let d_max = mat.max();
+    // }
 }
 
 #[cfg(test)]
@@ -184,7 +191,6 @@ mod tests {
     use bio::io::fasta::Record;
     use kodama::{linkage, Method};
 
-    use crate::core::analysis::hclust::haversine;
     use crate::core::io::read_fasta;
     use crate::core::utils::pairs::Pairwise;
     use crate::core::utils::{
@@ -193,7 +199,24 @@ mod tests {
     use rayon::iter::IntoParallelRefIterator;
 
     #[test]
-    fn test_haversine() {
+    fn test_haversine_hclust() {
+
+        /// Test implementation of the haversine formula
+        pub fn haversine(
+            (lat1, lon1): (f64, f64),
+            (lat2, lon2): (f64, f64),
+        ) -> f64 {
+            const EARTH_RADIUS: f64 = 3958.756; // miles
+
+            let (lat1, lon1) = (lat1.to_radians(), lon1.to_radians());
+            let (lat2, lon2) = (lat2.to_radians(), lon2.to_radians());
+
+            let delta_lat = lat2 - lat1;
+            let delta_lon = lon2 - lon1;
+            let x = (delta_lat / 2.0).sin().powi(2)
+                + lat1.cos() * lat2.cos() * (delta_lon / 2.0).sin().powi(2);
+            2.0 * EARTH_RADIUS * x.sqrt().atan()
+        }
         // From our data set. Each coordinate pair corresponds to a single observation.
         let coordinates = [
             (42.5833333, -71.8027778),
