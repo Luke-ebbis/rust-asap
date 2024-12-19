@@ -25,7 +25,7 @@ pub mod pairs {
     /// # A Pair struct
     ///
     /// An object to store two objects with a value.
-    #[derive(Eq, Debug, Copy, Clone)]
+    #[derive(Eq, Debug, Copy, Clone, Default)]
     pub struct Pair<A, T: Signed + Clone>
     where
         A: Clone,
@@ -34,6 +34,13 @@ pub mod pairs {
         pub a: A,
         pub b: A,
         pub x: T,
+    }
+
+    impl Pair<Record, f64>
+    {
+        pub(crate) fn get_identifiers(&self) -> (String, String) {
+            (self.x.to_string(), self.b.to_string())
+        }
     }
 
     impl<A: Clone, T: Signed + Clone> Pair<A, T> {

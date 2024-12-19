@@ -1,15 +1,18 @@
 /// Object for pairwise distance analysis
 pub mod distance {
-    
+    use distmat::symmetric::*;
+
     use crate::core::utils::pairs::{Pair, Pairwise};
     
     use bio::io::fasta::Record;
     
     use derive_builder::Builder;
+    use distmat::DataError;
     use num_traits::Float;
     use num_traits::Signed;
     use crate::core::io::read_fasta;
     use crate::core::utils::{fasta_distance_jukes_cantor_number, remove_empty};
+
 
     /// For now it only works with actual (symmetric) distances.
     #[derive(Builder)]
@@ -69,9 +72,9 @@ pub mod distance {
             .build()
             .unwrap();
         let mat = distanceAnalysis.run();
-        dbg!(&mat);
-        let max = mat.max();
-        dbg!(&max);
+        let dist = mat.to_dist();
+        let a = dist.get_symmetric(1,2).unwrap();
+        dbg!(a);
     }
 
     #[derive(Debug, PartialEq, PartialOrd, Clone)]
@@ -115,6 +118,22 @@ pub mod distance {
         /// Get the amount of pairwise comparisons.
         pub fn len(&self) -> usize {
             self.matrix.len()
+        }
+
+
+        pub fn to_dist(self) -> DistMatrix<f64> {
+            // let m = self.matrix.iter().map(|x| x.x).collect::<Vec<f64>>();A
+            let labeled_distances = self.matrix.into_iter().map(|x|
+                {
+                    let ids = x.get_identifiers();
+                    return (ids.0, ids.1, x.x)
+                });
+            let m: Result<DistMatrix<f64>, DataError> = DistMatrix::from_labelled_distances(labeled_distances);
+            match m {
+                Ok(dist) => dist,
+                Err(e) => panic!("{:?}", e),
+            }
+
         }
     }
 
